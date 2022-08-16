@@ -7,8 +7,9 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-// local contracts
-import "./MyNFT.sol";
+
+// TODO: RENAME THE "24 hours" AND GENERALIZE IT TO "CHUNKS OF INTERVALS PASSED".
+// TODO: TEST THE IMPLEMENTATION...
 
 /**
  * @notice The Controller contract which receives NFTs as staking and pays an ERC20 Token reward.
@@ -18,13 +19,14 @@ contract Controller is IERC721Receiver {
     address immutable internal deployer;
     IERC721Enumerable private stakedNFT;
     mapping(uint256 => address) public staker;  // keep track of who owns what NFT to handle withdrawals
-    mapping(address => uint256) public numStaked;
 
     // track rewards
     IERC20Metadata private rewardToken;  // the token you earn as reward
     uint256 public rewardRate_per_24hrs = 10;  // how many tokens do you receive per staked item per 24 hours
+    mapping(address => uint256) public numStaked;
     mapping(uint256 => uint256) stakedAtBlocktimestamp; // (tokenId) => (staking start timestamp)
     mapping(uint256 => uint256) num24hoursCollected; // (tokenId) => (num 24 hours collected)
+    uint256 rewardInterval = 24 hours;
     
     event Buy(address indexed buyer, uint256 amountTokens, uint256 indexed nftIDBought);
 
@@ -45,8 +47,8 @@ contract Controller is IERC721Receiver {
     }
 
     /**
-     * @notice Set a new reward rate per 24 hours.
-     * @param newRate The new reward rate. Example: newRate = 2. The user earns 2 Tokens per 24 hours per staked NFT.
+     * @notice Set a new reward rate per `rewardInterval`.
+     * @param newRate The new reward rate. Example: newRate = 2. The user earns 2 Tokens per rewardInterval=24 hours, per staked NFT.
      */
     function setRewardRate(uint256 newRate) external {
         rewardRate_per_24hrs = newRate;
@@ -60,17 +62,34 @@ contract Controller is IERC721Receiver {
         rewardToken = _rewardToken;
     }
 
+    /**
+     * @notice Reset the staking conditions of this Token ID.
+     * @param tokenId The ID of the token to reset.
+     */
+    function _reset(uint tokenId) internal {
+        address staker = staker[tokenId];
+        delete staker[tokenId];
+        numStaked[staker] -= 1;
+        delete stakedAtBlocktimestamp[tokenId];
+        delete num24hoursCollected[tokenId];
+    }
+
+    /**
+     * @notice Withdraw the NFT staked into the contract.
+     * @param tokenId The NFT to withdraw.
+     */
     function withdrawNFT(uint256 tokenId) external {
         require(msg.sender == staker[tokenId], "not authorized to withdraw!");
         
-        delete staker[tokenId];
-        numStaked[msg.sender] -= 1;
-        delete stakedAtBlocktimestamp[tokenId];
-        delete num24hoursCollected[tokenId];
+        // reset the NFT staking conditions
+        _reset(tokenId);
 
         stakedNFT.safeTransferFrom(address(this), msg.sender, tokenId);
     }
 
+    /**
+     * @notice Withdraw the rewards for this user given all their staked tokens.
+     */
     function withdrawReward() external {
         require(numStaked[msg.sender] > 0, "not staker in the contract!");
         
@@ -78,6 +97,7 @@ contract Controller is IERC721Receiver {
         uint bal = stakedNFT.balanceOf(msg.sender);
         assert(bal > 0);
         
+        uint numFound;
         uint totalNum24Hours; // across all staked NFTs of this user
         for (uint i; i < bal; i++) {
             // get this specific NFT owned by the caller:
@@ -87,7 +107,9 @@ contract Controller is IERC721Receiver {
             if (staker[thisTokenID] == address(0))
                 continue; // ..no
             
-            // yes, so collect rewards, count the number of 24 hours for this NFT
+            numFound += 1;
+
+            // yes, so collect rewards, count the number of `rewardInterval` for this NFT
             uint256 thisNum24Hours = _compute_num_24hours_single_nft(thisTokenID);
 
             assert(thisNum24Hours >= num24hoursCollected[thisTokenID]); // panic check
@@ -98,6 +120,9 @@ contract Controller is IERC721Receiver {
             
             // update the rewards collected for this token
             num24hoursCollected[thisTokenID] += thisNum24Hours;
+
+            if (numFound == numStaked[msg.sender])
+                break;
         }
 
         uint totalReward = totalNum24Hours * rewardRate_per_24hrs;
@@ -115,7 +140,7 @@ contract Controller is IERC721Receiver {
         uint deltaTime = currTime - stakedAtBlocktimestamp[tokenId];
         if (deltaTime <= 0) return 0;
 
-        uint num24hours = deltaTime % 24 hours;
+        uint num24hours = deltaTime % rewardInterval;  // rewardInterval = 24 hours, e.g.
 
         return num24hours;
     }
@@ -131,10 +156,11 @@ contract Controller is IERC721Receiver {
         uint256 tokenId,
         bytes calldata
     ) external returns (bytes4) {
+
         staker[tokenId] = from;  // log the owner of the NFT
         stakedAtBlocktimestamp[tokenId] = block.timestamp;
-        
         numStaked[from] += 1;
+        num24hoursCollected[tokenId] = 0;
 
         return IERC721Receiver.onERC721Received.selector;
     }
