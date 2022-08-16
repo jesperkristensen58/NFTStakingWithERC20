@@ -1,1 +1,1 @@
-<h1>Stake your NFT to receive an ERC20 Token Reward</h1>
+<h1>Mint an NFT with an ERC20 Token</h1>
