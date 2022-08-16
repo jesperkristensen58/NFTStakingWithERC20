@@ -6,10 +6,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-// TODO: RENAME THE "24 hours" AND GENERALIZE IT TO "CHUNKS OF INTERVALS PASSED".
-// TODO: TEST THE IMPLEMENTATION...
+import "./MyToken.sol";
 
 /**
  * @notice The Controller contract which receives NFTs as staking and pays an ERC20 Token reward.
@@ -17,24 +15,27 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Controller is IERC721Receiver {
 
     address immutable internal deployer;
-    IERC721Enumerable private stakedNFT;
+    IERC721Enumerable private immutable stakedNFT;
     mapping(uint256 => address) public staker;  // keep track of who owns what NFT to handle withdrawals
 
     // track rewards
-    IERC20Metadata private rewardToken;  // the token you earn as reward
-    uint256 public rewardRate_per_24hrs = 10;  // how many tokens do you receive per staked item per 24 hours
+    MyToken private rewardToken;  // the token you earn as reward
+    uint256 public rewardRate_per_Interval = 10;  // how many tokens do you receive per staked item per 24 hours
     mapping(address => uint256) public numStaked;
     mapping(uint256 => uint256) stakedAtBlocktimestamp; // (tokenId) => (staking start timestamp)
-    mapping(uint256 => uint256) num24hoursCollected; // (tokenId) => (num 24 hours collected)
+    mapping(uint256 => uint256) numIntervalsCollected; // (tokenId) => (num 24 hours collected)
     uint256 rewardInterval = 24 hours;
     
     event Buy(address indexed buyer, uint256 amountTokens, uint256 indexed nftIDBought);
 
     /**
      * @notice Construct the controller.
+     * @param stakedNFTContractAddress The NFT collection address being staked for rewards.
      */
-    constructor() {
+    constructor(IERC721Enumerable stakedNFTContractAddress, MyToken _rewardToken) {
         deployer = msg.sender;
+        stakedNFT = stakedNFTContractAddress;
+        rewardToken = _rewardToken;
     }
 
     /**
@@ -51,15 +52,7 @@ contract Controller is IERC721Receiver {
      * @param newRate The new reward rate. Example: newRate = 2. The user earns 2 Tokens per rewardInterval=24 hours, per staked NFT.
      */
     function setRewardRate(uint256 newRate) external {
-        rewardRate_per_24hrs = newRate;
-    }
-
-    /**
-     * @notice Set the token address in the controller.
-     * @param _rewardToken the address of the Reward token. This token is rewarded to the NFT staker (the user).
-     */
-    function setTokenAddress(IERC20Metadata _rewardToken) external onlyOwner {
-        rewardToken = _rewardToken;
+        rewardRate_per_Interval = newRate;
     }
 
     /**
@@ -67,11 +60,11 @@ contract Controller is IERC721Receiver {
      * @param tokenId The ID of the token to reset.
      */
     function _reset(uint tokenId) internal {
-        address staker = staker[tokenId];
+        address _staker = staker[tokenId];
         delete staker[tokenId];
-        numStaked[staker] -= 1;
+        numStaked[_staker] -= 1;
         delete stakedAtBlocktimestamp[tokenId];
-        delete num24hoursCollected[tokenId];
+        delete numIntervalsCollected[tokenId];
     }
 
     /**
@@ -87,6 +80,9 @@ contract Controller is IERC721Receiver {
         stakedNFT.safeTransferFrom(address(this), msg.sender, tokenId);
     }
 
+    // TODO: THE CONTROLLER NEEDS TO KNOW ABOUT THE TOKEN ADDRESS AND OWN SOME AS WELL TO SEND AS REWARDS!!!
+    // TODO: SO MAKE SURE THAT THE CONTROLLER CAN MINT WHATEVER THEY WANT... JUST CALL MINT WITH RECEIVER ADDRESS ACTUALLY
+
     /**
      * @notice Withdraw the rewards for this user given all their staked tokens.
      */
@@ -98,7 +94,7 @@ contract Controller is IERC721Receiver {
         assert(bal > 0);
         
         uint numFound;
-        uint totalNum24Hours; // across all staked NFTs of this user
+        uint totalNumIntervals; // across all staked NFTs of this user
         for (uint i; i < bal; i++) {
             // get this specific NFT owned by the caller:
             uint thisTokenID = stakedNFT.tokenOfOwnerByIndex(msg.sender, i);
@@ -110,24 +106,25 @@ contract Controller is IERC721Receiver {
             numFound += 1;
 
             // yes, so collect rewards, count the number of `rewardInterval` for this NFT
-            uint256 thisNum24Hours = _compute_num_24hours_single_nft(thisTokenID);
+            uint256 thisNumIntervals = _compute_num_24hours_single_nft(thisTokenID);
 
-            assert(thisNum24Hours >= num24hoursCollected[thisTokenID]); // panic check
+            assert(thisNumIntervals >= numIntervalsCollected[thisTokenID]); // panic check
 
             // and update our rewards collected for this token
             // but subtract everything we have counted in the past for this NFT:
-            totalNum24Hours += thisNum24Hours - num24hoursCollected[thisTokenID];
+            totalNumIntervals += thisNumIntervals - numIntervalsCollected[thisTokenID];
             
             // update the rewards collected for this token
-            num24hoursCollected[thisTokenID] += thisNum24Hours;
+            numIntervalsCollected[thisTokenID] += thisNumIntervals;
 
             if (numFound == numStaked[msg.sender])
                 break;
         }
 
-        uint totalReward = totalNum24Hours * rewardRate_per_24hrs;
+        uint totalReward = totalNumIntervals * rewardRate_per_Interval;
 
-        rewardToken.transferFrom(address(this), msg.sender, totalReward * (10 ** rewardToken.decimals()));
+        if (totalReward > 0)
+            rewardToken.mintToken(msg.sender, totalReward * (10 ** rewardToken.decimals()));
     }
 
     /**
@@ -160,7 +157,7 @@ contract Controller is IERC721Receiver {
         staker[tokenId] = from;  // log the owner of the NFT
         stakedAtBlocktimestamp[tokenId] = block.timestamp;
         numStaked[from] += 1;
-        num24hoursCollected[tokenId] = 0;
+        numIntervalsCollected[tokenId] = 0;
 
         return IERC721Receiver.onERC721Received.selector;
     }
