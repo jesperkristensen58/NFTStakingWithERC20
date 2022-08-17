@@ -12,7 +12,8 @@ import "./MyNFT.sol";
 import "./MyToken.sol";
 
 /**
- * @notice The Controller contract which receives NFTs as staking and pays an ERC20 Token reward.
+ * @notice The Controller contract which receives NFTs as staking and pays an ERC20 Token as reward.
+ * @author Jesper Kristensen
  */
 contract Controller is IERC721Receiver {
 
@@ -28,7 +29,7 @@ contract Controller is IERC721Receiver {
     mapping(address => uint256) private numStaked;
     mapping(uint256 => uint256) stakedAtBlocktimestamp; // (tokenId) => (staking start timestamp)
     mapping(uint256 => uint256) numIntervalsCollected; // (tokenId) => (num 24 hours collected)
-    uint256 rewardInterval = 60 seconds;
+    uint256 rewardInterval = 24 hours;
     
     event Reward(address indexed toStaker, uint256 amount, uint[] nftTokenIds, bool[] didTokenIdGiveReward);
 

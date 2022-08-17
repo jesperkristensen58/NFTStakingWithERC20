@@ -5,7 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 
 /**
- * @notice An NFT Contract. A main contract (not seen here) can receive ERC20 Tokens (not shown here) to mint these NFTs in here.
+ * @notice An ERC20 Token Contract. This is the Reward token given out by the Controller to stakers.
+ * @author Jesper Kristensen
  */
 contract MyToken is ERC20, ERC20Capped {
 
