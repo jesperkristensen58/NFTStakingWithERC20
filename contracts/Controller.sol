@@ -62,31 +62,33 @@ contract Controller is IERC721Receiver {
 
     /**
      * @notice Reset the staking conditions of this Token ID.
-     * @param tokenIdDeleted The ID of the token to reset.
+     * @param tokenIdDeleted The ID of the token to be deleted and removed from our staking.
      */
     function _reset(uint tokenIdDeleted) internal {
 
         address _staker = staker[tokenIdDeleted];
-        staker[tokenIdDeleted] = address(0);
+        delete staker[tokenIdDeleted];
 
         uint lastIndex = numStaked[_staker] - 1;
         lastIndex = lastIndex <= 0 ? 0 : lastIndex;
 
         numStaked[_staker] -= 1;
-        stakedAtBlocktimestamp[tokenIdDeleted] = 0;
-        numIntervalsCollected[tokenIdDeleted] = 0;
+        delete stakedAtBlocktimestamp[tokenIdDeleted];
+        delete numIntervalsCollected[tokenIdDeleted];
 
+        // now ... the following is a bit tricky:
+        // we want to remove in general an element from a list but efficiently
+        // so the way we do this is to replace the element removed (indexDeleted) with the last
+        // element (at lastIndex) in the list and since we reduced the length of the list above (numStaked)
+        // already. So the list will be correct and contain all NFTs staked by the user even after withdrawing this one,
+        // so below we are doing this swap (note: we can probably optimize if last index == index deleted):
         uint indexDeleted = tokenIdToGlobalIndex[_staker][tokenIdDeleted];
-        // tokenIdDeleted
-
-        // lastIndex
         uint lastTokenId = globalIndexToTokenId[_staker][lastIndex];
-
         // make the last token now be pointed to by the just-deleted index:
         tokenIdToGlobalIndex[_staker][lastTokenId] = indexDeleted;
         globalIndexToTokenId[_staker][indexDeleted] = lastTokenId;
 
-        tokenIdToGlobalIndex[_staker][tokenIdDeleted] = 0;
+        delete tokenIdToGlobalIndex[_staker][tokenIdDeleted];
     }
 
     /**
@@ -97,8 +99,10 @@ contract Controller is IERC721Receiver {
         require(msg.sender == staker[tokenId], "not authorized to withdraw!");
         
         // reset the NFT staking conditions
+        // this means we do not tally up more rewards for this specific NFT
         _reset(tokenId);
 
+        // now transfer the NFT from us to the user/staker
         stakedNFT.safeTransferFrom(address(this), msg.sender, tokenId);
     }
 
@@ -114,38 +118,45 @@ contract Controller is IERC721Receiver {
         
         uint totalNumIntervals; // across all staked NFTs of this user
         for (uint i; i < _numStaked; i++) {
+            // pick one of the staked NFTs of this user
             uint thisTokenId = globalIndexToTokenId[msg.sender][i];
 
-            // yes, so collect rewards, count the number of `rewardInterval` for this NFT
+            // let's check how many reward intervals this specific NFT has covered since initial staking
             uint256 thisNumIntervals = _compute_num_intervals_single_nft(thisTokenId);
             assert(thisNumIntervals >= numIntervalsCollected[thisTokenId]); // panic check
 
-            // and update our rewards collected for this token
-            // but subtract everything we have counted in the past for this NFT:
+            // take this most up to date number of intervals covered, but subtract our running counter
+            // of past intervals we already accounted for in the past
+            // in other words: ensure that each interval passed for this NFT is never double-counted (or multi-counted, to be precise):
             uint newIntervals = thisNumIntervals - numIntervalsCollected[thisTokenId];
 
             if (newIntervals > 0) {
+                // hey, we actually do have some rewards to collect for this specific NFT
                 totalNumIntervals += newIntervals;
 
-                // update the rewards collected for this token
+                // update the rewards collected for this NFT, so that we don't double count
                 numIntervalsCollected[thisTokenId] += newIntervals;
 
-                didTokenIdGiveReward[i] = true;
+                didTokenIdGiveReward[i] = true;  // let's store this for the event to be emitted later
             }
             nftIdsCollectingReward[i] = thisTokenId;
         }
 
+        // now that we have counted all intervals passed by *all* NFTs for this user, we can simply multiply by the reward rate:
+        // note that we assume the reward rate is the same for all NFTs:
         uint totalReward = (totalNumIntervals * rewardRate_per_Interval) * (10 ** rewardToken.decimals());
 
         if (totalReward > 0) {
+            // the user earned something!
             rewardToken.mintToken(msg.sender, totalReward);
 
+            // let's log this as well
             emit Reward(msg.sender, totalReward, nftIdsCollectingReward, didTokenIdGiveReward);
         }
     }
 
     /**
-     * @notice Compute the number of 24 hour periods passed for a single NFT since staking.
+     * @notice Compute the number of `rewardInterval`s passed for a single NFT since staking.
      * @param tokenId the token ID to check.
      * @return the number of `rewardInterval` intervals passed for a single NFT since staking (e.g. 24 hours).
      */
