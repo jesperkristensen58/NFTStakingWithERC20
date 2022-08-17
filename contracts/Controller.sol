@@ -17,20 +17,20 @@ import "./MyToken.sol";
 contract Controller is IERC721Receiver {
 
     address internal immutable deployer;
-    MyNFT private immutable stakedNFT;
-    mapping(uint256 => address) public staker;  // keep track of who owns what NFT to handle withdrawals
+    MyNFT internal immutable stakedNFT;
+    mapping(uint256 => address) private staker;  // keep track of who owns what NFT to handle withdrawals
     mapping(address => mapping(uint256 => uint256)) private globalIndexToTokenId; // (staker) -> (global list index) -> (token ID)
     mapping(address => mapping(uint256 => uint256)) private tokenIdToGlobalIndex; // (staker) -> (token ID) -> (global list index)
 
     // track rewards
     MyToken private rewardToken;  // the token you earn as reward
     uint256 public rewardRate_per_Interval = 10;  // how many tokens do you receive per staked item per 24 hours
-    mapping(address => uint256) public numStaked;
+    mapping(address => uint256) private numStaked;
     mapping(uint256 => uint256) stakedAtBlocktimestamp; // (tokenId) => (staking start timestamp)
     mapping(uint256 => uint256) numIntervalsCollected; // (tokenId) => (num 24 hours collected)
-    uint256 rewardInterval = 24 hours;
+    uint256 rewardInterval = 60 seconds;
     
-    event Buy(address indexed buyer, uint256 amountTokens, uint256 indexed nftIDBought);
+    event Reward(address indexed toStaker, uint256 amount, uint[] nftTokenIds, bool[] didTokenIdGiveReward);
 
     /**
      * @notice Construct the controller.
@@ -61,18 +61,31 @@ contract Controller is IERC721Receiver {
 
     /**
      * @notice Reset the staking conditions of this Token ID.
-     * @param tokenId The ID of the token to reset.
+     * @param tokenIdDeleted The ID of the token to reset.
      */
-    function _reset(uint tokenId) internal {
-        address _staker = staker[tokenId];
-        delete staker[tokenId];
-        numStaked[_staker] -= 1;
-        delete stakedAtBlocktimestamp[tokenId];
-        delete numIntervalsCollected[tokenId];
+    function _reset(uint tokenIdDeleted) internal {
 
-       uint index = tokenIdToGlobalIndex[_staker][tokenId];
-       delete tokenIdToGlobalIndex[_staker][index];
-       delete globalIndexToTokenId[_staker][tokenId];
+        address _staker = staker[tokenIdDeleted];
+        staker[tokenIdDeleted] = address(0);
+
+        uint lastIndex = numStaked[_staker] - 1;
+        lastIndex = lastIndex <= 0 ? 0 : lastIndex;
+
+        numStaked[_staker] -= 1;
+        stakedAtBlocktimestamp[tokenIdDeleted] = 0;
+        numIntervalsCollected[tokenIdDeleted] = 0;
+
+        uint indexDeleted = tokenIdToGlobalIndex[_staker][tokenIdDeleted];
+        // tokenIdDeleted
+
+        // lastIndex
+        uint lastTokenId = globalIndexToTokenId[_staker][lastIndex];
+
+        // make the last token now be pointed to by the just-deleted index:
+        tokenIdToGlobalIndex[_staker][lastTokenId] = indexDeleted;
+        globalIndexToTokenId[_staker][indexDeleted] = lastTokenId;
+
+        tokenIdToGlobalIndex[_staker][tokenIdDeleted] = 0;
     }
 
     /**
@@ -94,36 +107,48 @@ contract Controller is IERC721Receiver {
     function withdrawReward() external {
         require(numStaked[msg.sender] > 0, "not staker in the contract!");
         uint _numStaked = numStaked[msg.sender];
+
+        bool[] memory didTokenIdGiveReward = new bool[](_numStaked);
+        uint[] memory nftIdsCollectingReward = new uint[](_numStaked);
         
         uint totalNumIntervals; // across all staked NFTs of this user
         for (uint i; i < _numStaked; i++) {
-            uint thisTokenID = globalIndexToTokenId[msg.sender][i];
+            uint thisTokenId = globalIndexToTokenId[msg.sender][i];
 
             // yes, so collect rewards, count the number of `rewardInterval` for this NFT
-            uint256 thisNumIntervals = _compute_num_24hours_single_nft(thisTokenID);
-
-            assert(thisNumIntervals >= numIntervalsCollected[thisTokenID]); // panic check
+            uint256 thisNumIntervals = _compute_num_intervals_single_nft(thisTokenId);
+            assert(thisNumIntervals >= numIntervalsCollected[thisTokenId]); // panic check
 
             // and update our rewards collected for this token
             // but subtract everything we have counted in the past for this NFT:
-            totalNumIntervals += thisNumIntervals - numIntervalsCollected[thisTokenID];
-            
-            // update the rewards collected for this token
-            numIntervalsCollected[thisTokenID] += thisNumIntervals;
+            uint newIntervals = thisNumIntervals - numIntervalsCollected[thisTokenId];
+
+            if (newIntervals > 0) {
+                totalNumIntervals += newIntervals;
+
+                // update the rewards collected for this token
+                numIntervalsCollected[thisTokenId] += newIntervals;
+
+                didTokenIdGiveReward[i] = true;
+            }
+            nftIdsCollectingReward[i] = thisTokenId;
         }
 
-        uint totalReward = totalNumIntervals * rewardRate_per_Interval;
+        uint totalReward = (totalNumIntervals * rewardRate_per_Interval) * (10 ** rewardToken.decimals());
 
-        if (totalReward > 0)
-            rewardToken.mintToken(msg.sender, totalReward * (10 ** rewardToken.decimals()));
+        if (totalReward > 0) {
+            rewardToken.mintToken(msg.sender, totalReward);
+
+            emit Reward(msg.sender, totalReward, nftIdsCollectingReward, didTokenIdGiveReward);
+        }
     }
 
     /**
      * @notice Compute the number of 24 hour periods passed for a single NFT since staking.
      * @param tokenId the token ID to check.
-     * @return the number of 24 hour periods passed for a single NFT since staking.
+     * @return the number of `rewardInterval` intervals passed for a single NFT since staking (e.g. 24 hours).
      */
-    function _compute_num_24hours_single_nft(uint tokenId) internal view returns (uint256) {
+    function _compute_num_intervals_single_nft(uint tokenId) internal view returns (uint256) {
         uint currTime = block.timestamp;
         uint deltaTime = currTime - stakedAtBlocktimestamp[tokenId];
         if (deltaTime <= 0) return 0;

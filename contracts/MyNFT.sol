@@ -23,7 +23,6 @@ contract MyNFT is ERC721, ERC721Enumerable {
 
     /**
      * @notice Mint a new NFT from this collection to the receiver.
-     * @dev Only an admin can create a new NFT.
      */
     function mint() external {
         _safeMint(msg.sender, tokenSupply);

@@ -3,7 +3,6 @@ pragma solidity 0.8.14;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @notice An NFT Contract. A main contract (not seen here) can receive ERC20 Tokens (not shown here) to mint these NFTs in here.
@@ -11,8 +10,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract MyToken is ERC20, ERC20Capped {
 
     string public constant NAME = "MyToken";
-    string constant public SYMBOL = "MYT";
-    uint256 constant private CAP = 1_000_000;
+    string public constant SYMBOL = "MYT";
+    uint256 private constant CAP = 1_000_000;
     uint256 private wTokens_per_Wei = 2;  // 1 wei buys 2 wTokens; in general, 1 wei buys `wTokens_per_Wei` wTokens.
     address private immutable deployer;
     mapping(address => bool) admins;
@@ -21,16 +20,18 @@ contract MyToken is ERC20, ERC20Capped {
 
     /**
      * @notice Construct our ERC20 Token contract.
-     * @param initialSupply The initial supply of tokens (not wTokens, but Tokens).
      * @dev Deploying this contract mints initialSupply to the deployer.
      */
-    constructor(uint256 initialSupply) ERC20(NAME, SYMBOL) ERC20Capped(CAP * 10 ** decimals()) {
+    constructor() ERC20(NAME, SYMBOL) ERC20Capped(CAP * 10 ** decimals()) {
         // initially mint to this contract some initial supply
-        ERC20._mint(address(this), initialSupply * 10 ** decimals());
+        ERC20._mint(address(this), 100 * 10 ** decimals());
         deployer = msg.sender;
         admins[deployer] = true;
     }
 
+    /**
+     * @notice Restrict access to only admins.
+     */
     modifier onlyAdmin() {
         require(admins[msg.sender] == true, "unauthorized!");
         _;
