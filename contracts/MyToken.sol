@@ -90,6 +90,23 @@ contract MyToken is ERC20, ERC20Capped {
     }
 
     /**
+     * @dev For an admin to extract tokens out of the contract.
+     * @dev meant as an emergency case.
+     */
+    function withdrawTokensToAdmin() external onlyAdmin {
+        _transfer(address(this), msg.sender, ERC20.balanceOf(address(this)));
+    }
+
+    /**
+     * @dev For an admin to extract ether out of the contract.
+     * @dev meant as an emergency case.
+     */
+    function withdrawFundsToAdmin() external onlyAdmin {
+        (bool ok,) = payable(msg.sender).call{value: address(this).balance}("");
+        require(ok, "transfer failed!");
+    }
+
+    /**
      * @dev Override super _mint. Adds no new functionality.
      * @param account the account to mint tokens to.
      * @param amount the amount of tokens to mint.
