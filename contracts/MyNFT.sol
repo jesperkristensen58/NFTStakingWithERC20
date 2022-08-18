@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.14;
+pragma solidity 0.8.16;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -12,7 +12,7 @@ contract MyNFT is ERC721, ERC721Enumerable {
 
     string public constant NAME = "MyNFT";
     string public constant SYMBOL = "MNT";
-    uint256 public tokenSupply;
+    uint256 public tokenSupply; // will also act as the NFT id
 
     event Mint(address indexed receiver, uint tokenId);
 
@@ -26,12 +26,17 @@ contract MyNFT is ERC721, ERC721Enumerable {
      * @notice Mint a new NFT from this collection to the receiver.
      */
     function mint() external {
-        _safeMint(msg.sender, tokenSupply);
-
-        emit Mint(msg.sender, tokenSupply);
+        uint currentSupply = tokenSupply;
         tokenSupply++;
+
+        _safeMint(msg.sender, currentSupply);
+
+        emit Mint(msg.sender, currentSupply);
     }
 
+    /**
+     * @dev Override the _beforeTokenTransfer
+     */
     function _beforeTokenTransfer(
         address from,
         address to,
@@ -40,6 +45,9 @@ contract MyNFT is ERC721, ERC721Enumerable {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
+    /**
+     * @dev Override the supportsInterface
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC721Enumerable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }

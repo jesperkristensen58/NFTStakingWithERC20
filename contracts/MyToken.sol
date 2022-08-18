@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.14;
+pragma solidity 0.8.16;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
@@ -10,12 +10,12 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
  */
 contract MyToken is ERC20, ERC20Capped {
 
+    address private immutable deployer;
     string public constant NAME = "MyToken";
     string public constant SYMBOL = "MYT";
     uint256 private constant CAP = 1_000_000;
-    uint256 private wTokens_per_Wei = 2;  // 1 wei buys 2 wTokens; in general, 1 wei buys `wTokens_per_Wei` wTokens.
-    address private immutable deployer;
-    mapping(address => bool) admins;
+    uint256 private wTokensPerWei = 2;  // 1 wei buys 2 wTokens; in general, 1 wei buys `wTokens_per_Wei` wTokens.
+    mapping(address => bool) private admins;
 
     event Buy(address indexed buyer, uint amount, uint price);
 
@@ -23,9 +23,9 @@ contract MyToken is ERC20, ERC20Capped {
      * @notice Construct our ERC20 Token contract.
      * @dev Deploying this contract mints initialSupply to the deployer.
      */
-    constructor() ERC20(NAME, SYMBOL) ERC20Capped(CAP * 10 ** decimals()) {
+    constructor() ERC20(NAME, SYMBOL) ERC20Capped(CAP * 1 ether) {
         // initially mint to this contract some initial supply
-        ERC20._mint(address(this), 100 * 10 ** decimals());
+        ERC20._mint(address(this), 100 * 1 ether);
         deployer = msg.sender;
         admins[deployer] = true;
     }
@@ -43,7 +43,7 @@ contract MyToken is ERC20, ERC20Capped {
      * @param newPrice the new price to use. If "2" this means you get 2 wToken per 1 wei, or 2 tokens per 1 ether.
      */
     function setPrice(uint newPrice) external onlyAdmin {
-        wTokens_per_Wei = newPrice;
+        wTokensPerWei = newPrice;
     }
 
     /**
@@ -70,7 +70,7 @@ contract MyToken is ERC20, ERC20Capped {
     function mintToken(address to, uint amount) external onlyAdmin {
         _mint(to, amount);
 
-        emit Buy(to, amount, wTokens_per_Wei);
+        emit Buy(to, amount, wTokensPerWei);
     }
 
     /**
@@ -78,7 +78,7 @@ contract MyToken is ERC20, ERC20Capped {
      * @dev if there is an internal supply, send from that, if not: mint new.
      */
     function buyToken() external payable {
-        uint256 wTokensToSell = msg.value * wTokens_per_Wei;
+        uint256 wTokensToSell = msg.value * wTokensPerWei;
 
         // do we have internal tokens in our supply?
         if (ERC20.balanceOf(address(this)) >= wTokensToSell)
@@ -86,11 +86,11 @@ contract MyToken is ERC20, ERC20Capped {
         else
             _mint(msg.sender, wTokensToSell);
         
-        emit Buy(msg.sender, wTokensToSell, wTokens_per_Wei);
+        emit Buy(msg.sender, wTokensToSell, wTokensPerWei);
     }
 
     /**
-     * @notice Override super _mint. Adds no new functionality.
+     * @dev Override super _mint. Adds no new functionality.
      * @param account the account to mint tokens to.
      * @param amount the amount of tokens to mint.
      */
