@@ -13,7 +13,7 @@ import "./MyToken.sol";
 
 /**
  * @notice The Controller contract which receives NFTs as staking and pays an ERC20 Token as reward.
- * @author Jesper Kristensen
+ * @author Jesper Kristensen (@cryptojesperk)
  */
 contract Controller is IERC721Receiver {
 

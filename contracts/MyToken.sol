@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 
 /**
  * @notice An ERC20 Token Contract. This is the Reward token given out by the Controller to stakers.
- * @author Jesper Kristensen
+ * @author Jesper Kristensen (@cryptojesperk)
  */
 contract MyToken is ERC20, ERC20Capped {
 
