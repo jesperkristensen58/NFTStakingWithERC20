@@ -6,9 +6,10 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 /**
  * @notice An NFT Contract. A main contract/controller (not seen here) can receive ERC20 Tokens (not shown here) to mint these NFTs in here.
+ * @notice Anyone can mint these NFTs. Then, they can send them to the Controller.sol contract to earn MyToken rewards.
  * @author Jesper Kristensen (@cryptojesperk)
  */
-contract MyNFT is ERC721, ERC721Enumerable {
+contract MyNFT is ERC721 {
 
     string public constant NAME = "MyNFT";
     string public constant SYMBOL = "MNT";
@@ -32,23 +33,5 @@ contract MyNFT is ERC721, ERC721Enumerable {
         _safeMint(msg.sender, currentSupply);
 
         emit Mint(msg.sender, currentSupply);
-    }
-
-    /**
-     * @dev Override the _beforeTokenTransfer
-     */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal override(ERC721, ERC721Enumerable) {
-        super._beforeTokenTransfer(from, to, tokenId);
-    }
-
-    /**
-     * @dev Override the supportsInterface
-     */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC721Enumerable) returns (bool) {
-        return super.supportsInterface(interfaceId);
     }
 }
