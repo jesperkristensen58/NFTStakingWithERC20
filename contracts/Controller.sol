@@ -164,6 +164,15 @@ contract Controller is IERC721Receiver {
     }
 
     /**
+     * @dev For the owner to extract ether out of the contract if needed.
+     * @dev meant as an emergency case.
+     */
+    function withdrawFundsToAdmin() external onlyOwner {
+        (bool ok,) = payable(msg.sender).call{value: address(this).balance}("");
+        require(ok, "transfer failed!");
+    }
+
+    /**
      * @notice Implement gas-efficient version of NFT transfer to the contract.
      * @dev when NFT is transferred to this contract, this function is automatically called, so make state changes here.
      * @dev this implies that we don't need a separate "depositNFT" function.
