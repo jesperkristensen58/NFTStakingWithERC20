@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 /**
  * @notice An NFT Contract. A main contract/controller (not seen here) can receive ERC20 Tokens (not shown here) to mint these NFTs in here.
- * @author Jesper Kristensen
+ * @author Jesper Kristensen (@cryptojesperk)
  */
 contract MyNFT is ERC721, ERC721Enumerable {
 
