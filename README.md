@@ -1,4 +1,4 @@
-<h1>Mint an NFT with an ERC20 Token</h1>
+<h1>Stake an NFT for rewards in an ERC20 Token</h1>
 
 This contract gives you ability to stake your NFT(s) and earn reward tokens (an imagined ERC20 token) in return.
 
