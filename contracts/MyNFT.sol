@@ -15,6 +15,7 @@ contract MyNFT is ERC721 {
     string public constant SYMBOL = "MNT";
     uint256 public tokenSupply; // will also act as the NFT id
 
+    // emit a mint event
     event Mint(address indexed receiver, uint tokenId);
 
     /**
