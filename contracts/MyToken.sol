@@ -9,15 +9,14 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
  * @author Jesper Kristensen (@cryptojesperk)
  */
 contract MyToken is ERC20, ERC20Capped {
-
     address private immutable deployer;
     string public constant NAME = "MyToken";
     string public constant SYMBOL = "MYT";
     uint256 private constant CAP = 1_000_000;
-    uint256 private wTokensPerWei = 2;  // 1 wei buys 2 wTokens; in general, 1 wei buys `wTokens_per_Wei` wTokens.
+    uint256 private wTokensPerWei = 2; // 1 wei buys 2 wTokens; in general, 1 wei buys `wTokens_per_Wei` wTokens.
     mapping(address => bool) private admins;
 
-    event Buy(address indexed buyer, uint amount, uint price);
+    event Buy(address indexed buyer, uint256 amount, uint256 price);
 
     /**
      * @notice Construct our ERC20 Token contract.
@@ -34,7 +33,7 @@ contract MyToken is ERC20, ERC20Capped {
      * @notice Restrict access to only admins.
      */
     modifier onlyAdmin() {
-        require(admins[msg.sender] == true, "unauthorized!");
+        require(admins[msg.sender], "unauthorized!");
         _;
     }
 
@@ -42,7 +41,7 @@ contract MyToken is ERC20, ERC20Capped {
      * @notice Change the price of the Token. This is in units of "wTokens per Wei".
      * @param newPrice the new price to use. If "2" this means you get 2 wToken per 1 wei, or 2 tokens per 1 ether.
      */
-    function setPrice(uint newPrice) external onlyAdmin {
+    function setPrice(uint256 newPrice) external onlyAdmin {
         wTokensPerWei = newPrice;
     }
 
@@ -56,18 +55,18 @@ contract MyToken is ERC20, ERC20Capped {
 
     /**
      * @notice Remove admin from internal state.
-     * @param _admin the admin to remove.
+     * @param adminToRemove the admin to remove.
      * @dev note: Cannot remove deployer (original admin).
      */
-    function removeAdmin(address _admin) external onlyAdmin {
-        require(_admin != deployer, "invalid admin to remove!");
-        admins[_admin] = false;
+    function removeAdmin(address adminToRemove) external onlyAdmin {
+        require(adminToRemove != deployer, "invalid admin to remove!");
+        admins[adminToRemove] = false;
     }
 
     /**
      * @notice Admins can mint tokens to anyone.
      */
-    function mintToken(address to, uint amount) external onlyAdmin {
+    function mintToken(address to, uint256 amount) external onlyAdmin {
         _mint(to, amount);
 
         emit Buy(to, amount, wTokensPerWei);
@@ -81,11 +80,9 @@ contract MyToken is ERC20, ERC20Capped {
         uint256 wTokensToSell = msg.value * wTokensPerWei;
 
         // do we have internal tokens in our supply?
-        if (ERC20.balanceOf(address(this)) >= wTokensToSell)
-            _transfer(address(this), msg.sender, wTokensToSell);
-        else
-            _mint(msg.sender, wTokensToSell);
-        
+        if (ERC20.balanceOf(address(this)) >= wTokensToSell) _transfer(address(this), msg.sender, wTokensToSell);
+        else _mint(msg.sender, wTokensToSell);
+
         emit Buy(msg.sender, wTokensToSell, wTokensPerWei);
     }
 
@@ -102,7 +99,9 @@ contract MyToken is ERC20, ERC20Capped {
      * @dev meant as an emergency case.
      */
     function withdrawFundsToAdmin() external onlyAdmin {
-        (bool ok,) = payable(msg.sender).call{value: address(this).balance}("");
+        (bool ok, ) = payable(msg.sender).call{value: address(this).balance}(
+            ""
+        );
         require(ok, "transfer failed!");
     }
 
@@ -111,7 +110,10 @@ contract MyToken is ERC20, ERC20Capped {
      * @param account the account to mint tokens to.
      * @param amount the amount of tokens to mint.
      */
-    function _mint(address account, uint256 amount) internal override(ERC20, ERC20Capped) {
+    function _mint(address account, uint256 amount)
+        internal
+        override(ERC20, ERC20Capped)
+    {
         super._mint(account, amount);
     }
 }

@@ -10,13 +10,12 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
  * @author Jesper Kristensen (@cryptojesperk)
  */
 contract MyNFT is ERC721 {
-
     string public constant NAME = "MyNFT";
     string public constant SYMBOL = "MNT";
     uint256 public tokenSupply; // will also act as the NFT id
 
     // emit a mint event
-    event Mint(address indexed receiver, uint tokenId);
+    event Mint(address indexed receiver, uint256 tokenId);
 
     /**
      * @notice Construct our NFT contract.
@@ -28,11 +27,11 @@ contract MyNFT is ERC721 {
      * @notice Mint a new NFT from this collection to the receiver.
      */
     function mint() external {
-        uint currentSupply = tokenSupply;
+        uint256 currentSupply = tokenSupply;
         tokenSupply++;
 
-        _safeMint(msg.sender, currentSupply);
-
         emit Mint(msg.sender, currentSupply);
+
+        _safeMint(msg.sender, currentSupply);
     }
 }
