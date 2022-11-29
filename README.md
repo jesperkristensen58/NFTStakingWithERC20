@@ -9,51 +9,125 @@ Any owner of the NFT collection (see the contracts folder, MyNFT.sol) can stake 
 
 Deployments took place on Goerli.
 
-Token deployed at: 0xFFA0158422Bed94335001120Cd86670Ea51B0720
-NFT deployed at: 0xFd83B5256c190b8dCd48992d91B20863587Bf13f
-Controller deployed at: 0x2ee05Bb7c018af753DA1292063DbC2DD65a7A15e
+```
+> npx hardhat run scripts/deploy.js --network goerli
+Deploying with a an upgradeable proxy pattern.
+============================================================
+DEPLOYER:
+Deploying contracts with the account:  0x4C6Caa288725b362d97728226e148680Ff7D1117
+Account balance:                       973802662963632016
+============================================================
+MyToken Contract address: 0x618931C46CB8Cbb9Ce1e858ba8A6fa18151841Bb
+MyNFT Contract address: 0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40
+Controller Contract address: 0x108f62A1a426801148b07433456A7ABE16952D3a
+```
 
 The contracts were then verified with:
 
 ```
-> npx hardhat verify 0xFFA0158422Bed94335001120Cd86670Ea51B0720
-(...)
+> npx hardhat verify 0x618931C46CB8Cbb9Ce1e858ba8A6fa18151841Bb --network goerli
+Verifying implementation: 0xf2762F2cB27770F8492D89044e5958aEA70Cd5ce
+Nothing to compile
+Implementation 0xf2762F2cB27770F8492D89044e5958aEA70Cd5ce already verified.
+Verifying proxy: 0x618931C46CB8Cbb9Ce1e858ba8A6fa18151841Bb
+Contract at 0x618931C46CB8Cbb9Ce1e858ba8A6fa18151841Bb already verified.
+Linking proxy 0x618931C46CB8Cbb9Ce1e858ba8A6fa18151841Bb with implementation
+Successfully linked proxy to implementation.
+Verifying proxy admin: 0xAE91efeAF5e4f706299EDE61b995439663c164Be
+Contract at 0xAE91efeAF5e4f706299EDE61b995439663c164Be already verified.
 
-> npx hardhat verify 0xFd83B5256c190b8dCd48992d91B20863587Bf13f
-Verifying implementation: 0x302c7F5CC9Eb8fb5Ca20DA4C915F3de0904527F3
-Compiled 19 Solidity files successfully
+Proxy fully verified.
+
+> npx hardhat verify 0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40 --network goerli
+Verifying implementation: 0x86132c7B35dD5E2ef4419F77002a940A0f9AAFd5
+Nothing to compile
 Successfully submitted source code for contract
-contracts/MyNFT.sol:MyNFT at 0x302c7F5CC9Eb8fb5Ca20DA4C915F3de0904527F3
+contracts/MyNFT.sol:MyNFT at 0x86132c7B35dD5E2ef4419F77002a940A0f9AAFd5
 for verification on the block explorer. Waiting for verification result...
 
 Successfully verified contract MyNFT on Etherscan.
-https://goerli.etherscan.io/address/0x302c7F5CC9Eb8fb5Ca20DA4C915F3de0904527F3#code
-Verifying proxy: 0xFd83B5256c190b8dCd48992d91B20863587Bf13f
-Contract at 0xFd83B5256c190b8dCd48992d91B20863587Bf13f already verified.
-Linking proxy 0xFd83B5256c190b8dCd48992d91B20863587Bf13f with implementation
+https://goerli.etherscan.io/address/0x86132c7B35dD5E2ef4419F77002a940A0f9AAFd5#code
+Verifying proxy: 0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40
+Contract at 0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40 already verified.
+Linking proxy 0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40 with implementation
 Successfully linked proxy to implementation.
 Verifying proxy admin: 0xAE91efeAF5e4f706299EDE61b995439663c164Be
 Contract at 0xAE91efeAF5e4f706299EDE61b995439663c164Be already verified.
 
 Proxy fully verified.
 
-> npx hardhat verify 0x2ee05Bb7c018af753DA1292063DbC2DD65a7A15e
-Verifying implementation: 0x54a09F5B0fD46Da1663ca07A329C747C73ae5e47
+> npx hardhat verify 0x108f62A1a426801148b07433456A7ABE16952D3a --network goerli
+Verifying implementation: 0x52da92dc86b4037EaCa1399F63A8551aAe9C7484
 Nothing to compile
 Successfully submitted source code for contract
-contracts/Controller.sol:Controller at 0x54a09F5B0fD46Da1663ca07A329C747C73ae5e47
+contracts/Controller.sol:Controller at 0x52da92dc86b4037EaCa1399F63A8551aAe9C7484
 for verification on the block explorer. Waiting for verification result...
 
 Successfully verified contract Controller on Etherscan.
-https://goerli.etherscan.io/address/0x54a09F5B0fD46Da1663ca07A329C747C73ae5e47#code
-Verifying proxy: 0x2ee05Bb7c018af753DA1292063DbC2DD65a7A15e
-Contract at 0x2ee05Bb7c018af753DA1292063DbC2DD65a7A15e already verified.
-Linking proxy 0x2ee05Bb7c018af753DA1292063DbC2DD65a7A15e with implementation
+https://goerli.etherscan.io/address/0x52da92dc86b4037EaCa1399F63A8551aAe9C7484#code
+Verifying proxy: 0x108f62A1a426801148b07433456A7ABE16952D3a
+Contract at 0x108f62A1a426801148b07433456A7ABE16952D3a already verified.
+Linking proxy 0x108f62A1a426801148b07433456A7ABE16952D3a with implementation
 Successfully linked proxy to implementation.
 Verifying proxy admin: 0xAE91efeAF5e4f706299EDE61b995439663c164Be
 Contract at 0xAE91efeAF5e4f706299EDE61b995439663c164Be already verified.
 
 Proxy fully verified.
+```
+
+Now upgrade the NFT proxy:
+
+```
+npx hardhat run scripts/upgradeToGodMode.js --network goerli
+Upgrading the proxy NFT contract.
+============================================================
+DEPLOYER:
+Deploying contracts with the account:  0x4C6Caa288725b362d97728226e148680Ff7D1117
+Account balance:                       966194880854859991
+============================================================
+Upgraded contract:  0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40
+```
+
+Now, before verifying it, etherscan showed this:
+
+```
+Implementation contract is now on 0x065f88606812529eb8b144bb0c16c88e8c9fdfab but NOT verified. Please request for the new implementation contract to be verified.
+```
+
+So we need to verify the upgraded NFT contract:
+
+```
+npx hardhat verify 0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40 --network goerli
+Verifying implementation: 0x065f88606812529eB8b144BB0C16c88E8C9FdFAb
+Nothing to compile
+Successfully submitted source code for contract
+contracts/MyNFTGodMode.sol:MyNFTGodMode at 0x065f88606812529eB8b144BB0C16c88E8C9FdFAb
+for verification on the block explorer. Waiting for verification result...
+
+Successfully verified contract MyNFTGodMode on Etherscan.
+https://goerli.etherscan.io/address/0x065f88606812529eB8b144BB0C16c88E8C9FdFAb#code
+Verifying proxy: 0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40
+Contract at 0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40 already verified.
+Linking proxy 0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40 with implementation
+Successfully linked proxy to implementation.
+Verifying proxy admin: 0xAE91efeAF5e4f706299EDE61b995439663c164Be
+Contract at 0xAE91efeAF5e4f706299EDE61b995439663c164Be already verified.
+
+Proxy fully verified.
+```
+
+Now verify this on etherscan by seeing the "write as proxy." Indeed I saw the new updated function:
+
+```
+https://goerli.etherscan.io/address/0x6B16dd3D4439feFA3e64cc98b907B5F3630C8b40#writeProxyContract#F2
+```
+
+## Upgrade the NFT
+
+Upgrade the NFT contract to the God Mode version:
+
+```
+npx hardhat run scripts/upgradeToGodMode.js --network goerli
 ```
 
 ## Contact
