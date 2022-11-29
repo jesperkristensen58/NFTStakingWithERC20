@@ -132,6 +132,7 @@ npx hardhat run scripts/upgradeToGodMode.js --network goerli
 
 ## Gas Report Result from using Clones
 
+(the table below does not show up nicely in the markdown file, but if you open the file raw, the table will show)
 ·------------------------------------------------|---------------------------|---------------|-----------------------------·
 |              Solc version: 0.8.16              ·  Optimizer enabled: true  ·  Runs: 10000  ·  Block limit: 30000000 gas  │
 ·················································|···························|···············|······························
