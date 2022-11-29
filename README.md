@@ -130,6 +130,35 @@ Upgrade the NFT contract to the God Mode version:
 npx hardhat run scripts/upgradeToGodMode.js --network goerli
 ```
 
+## Gas Report Result from using Clones
+
+·------------------------------------------------|---------------------------|---------------|-----------------------------·
+|              Solc version: 0.8.16              ·  Optimizer enabled: true  ·  Runs: 10000  ·  Block limit: 30000000 gas  │
+·················································|···························|···············|······························
+|  Methods                                                                                                                 │
+·····················|···························|·············|·············|···············|···············|··············
+|  Contract          ·  Method                   ·  Min        ·  Max        ·  Avg          ·  # calls      ·  usd (avg)  │
+·····················|···························|·············|·············|···············|···············|··············
+|  ERC20Upgradeable  ·  transferFrom             ·          -  ·          -  ·        62452  ·            6  ·          -  │
+·····················|···························|·············|·············|···············|···············|··············
+|  MyNFT             ·  mint                     ·      82243  ·      99343  ·        93643  ·            6  ·          -  │
+·····················|···························|·············|·············|···············|···············|··············
+|  MyNFTGodMode      ·  forceTransfer            ·      47186  ·      69074  ·        56930  ·            8  ·          -  │
+·····················|···························|·············|·············|···············|···············|··············
+|  MyTokenFactory    ·  createNewERC20           ·    1608850  ·    1608862  ·      1608856  ·            4  ·          -  │
+·····················|···························|·············|·············|···············|···············|··············
+|  MyTokenFactory    ·  createNewERC20WithClone  ·     270555  ·     270567  ·       270561  ·            4  ·          -  │
+·····················|···························|·············|·············|···············|···············|··············
+
+We see that:
+
+createNewERC20 takes up an average of 1,608,856 gas.
+createNewERC20WithClone using the Clones pattern takes up an average of 270,561 gas.
+
+Note that each was called 4 times in total.
+
+Thus, using the Clones pattern in this specific setting is ~16.8% of the vanilla creation approach (and thus >80% more gas efficient on contract creation).
+
 ## Contact
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/cryptojesperk.svg?style=social&label=Follow%20%40cryptojesperk)](https://twitter.com/cryptojesperk)
 

@@ -13,7 +13,6 @@ contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable {
     address private deployer;
     string public constant NAME = "MyToken";
     string public constant SYMBOL = "MYT";
-    uint256 private CAP;
     uint256 private wTokensPerWei;
     mapping(address => bool) private admins;
 
@@ -23,12 +22,11 @@ contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable {
      * @notice Initialize our ERC20 Token contract.
      * @dev Deploying this contract mints initialSupply to the deployer.
      */
-    function initialize() public initializer {
-        CAP = 1_000_000;
+    function initialize(uint256 _cap) public initializer {
         wTokensPerWei = 2; // 1 wei buys 2 wTokens; in general, 1 wei buys `wTokens_per_Wei` wTokens.
 
         __ERC20_init(NAME, SYMBOL);
-        __ERC20Capped_init(CAP * 1 ether);
+        __ERC20Capped_init(_cap * 1 ether);
 
         ERC20Upgradeable._mint(address(this), 100 * 1 ether);
         deployer = msg.sender;
