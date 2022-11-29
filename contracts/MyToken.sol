@@ -3,12 +3,13 @@ pragma solidity 0.8.16;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @notice An ERC20 Token Contract. This is the Reward token given out by the Controller to stakers.
  * @author Jesper Kristensen (@cryptojesperk)
  */
-contract MyToken is ERC20Upgradeable, ERC20CappedUpgradeable {
+contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable {
     address private deployer;
     string public constant NAME = "MyToken";
     string public constant SYMBOL = "MYT";

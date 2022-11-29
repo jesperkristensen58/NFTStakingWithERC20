@@ -12,8 +12,8 @@ import "./MyToken.sol";
  * @author Jesper Kristensen (@cryptojesperk)
  */
 contract Controller is IERC721ReceiverUpgradeable, Initializable {
-    address internal deployer;
-    MyNFT internal stakedNFT;
+    address public deployer;
+    MyNFT public stakedNFT;
 
     // keep track of which NFTs are staked by which user
     mapping(uint256 => address) private staker; // keep track of who owns what NFT to handle withdrawals
@@ -21,7 +21,7 @@ contract Controller is IERC721ReceiverUpgradeable, Initializable {
     mapping(address => mapping(uint256 => uint256)) private tokenIdToListIndex; // (staker) -> (token ID) -> (list index)
 
     // track rewards per NFT
-    MyToken private rewardToken; // the token you earn as reward
+    MyToken public rewardToken; // the token you earn as reward
     uint256 public rewardRatePerInterval; // how many tokens do you receive per staked item per 24 hours
     mapping(address => uint256) private numStaked;
     mapping(uint256 => uint256) private stakedAtBlocktimestamp; // (tokenId) => (staking start timestamp)
@@ -45,7 +45,7 @@ contract Controller is IERC721ReceiverUpgradeable, Initializable {
         deployer = msg.sender;
         rewardRatePerInterval = 10;
         stakedNFT = MyNFT(stakedNFTContractAddress);
-        rewardToken = MyToken(_rewardTokenAddress);   
+        rewardToken = MyToken(_rewardTokenAddress); 
     }
 
     /**
