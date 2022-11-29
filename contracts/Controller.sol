@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "./MyNFT.sol";
 import "./MyToken.sol";
@@ -10,9 +11,9 @@ import "./MyToken.sol";
  * @notice The Controller contract which receives NFTs as staking and pays an ERC20 Token as reward.
  * @author Jesper Kristensen (@cryptojesperk)
  */
-contract Controller is IERC721Receiver {
-    address internal immutable deployer;
-    MyNFT internal immutable stakedNFT;
+contract Controller is IERC721ReceiverUpgradeable, Initializable {
+    address internal deployer;
+    MyNFT internal stakedNFT;
 
     // keep track of which NFTs are staked by which user
     mapping(uint256 => address) private staker; // keep track of who owns what NFT to handle withdrawals
@@ -21,7 +22,7 @@ contract Controller is IERC721Receiver {
 
     // track rewards per NFT
     MyToken private rewardToken; // the token you earn as reward
-    uint256 public rewardRatePerInterval = 10; // how many tokens do you receive per staked item per 24 hours
+    uint256 public rewardRatePerInterval; // how many tokens do you receive per staked item per 24 hours
     mapping(address => uint256) private numStaked;
     mapping(uint256 => uint256) private stakedAtBlocktimestamp; // (tokenId) => (staking start timestamp)
     mapping(uint256 => uint256) private numIntervalsAlreadyCollected; // (tokenId) => (num 24 hours collected)
@@ -38,11 +39,13 @@ contract Controller is IERC721Receiver {
     /**
      * @notice Construct the controller.
      * @param stakedNFTContractAddress The NFT collection address being staked for rewards.
+     * @param _rewardTokenAddress The reward token (ERC20).
      */
-    constructor(MyNFT stakedNFTContractAddress, MyToken _rewardTokenAddress) {
+    function initialize(MyNFT stakedNFTContractAddress, MyToken _rewardTokenAddress) public initializer {
         deployer = msg.sender;
+        rewardRatePerInterval = 10;
         stakedNFT = MyNFT(stakedNFTContractAddress);
-        rewardToken = MyToken(_rewardTokenAddress);
+        rewardToken = MyToken(_rewardTokenAddress);   
     }
 
     /**
@@ -214,6 +217,6 @@ contract Controller is IERC721Receiver {
         stakedAtBlocktimestamp[tokenId] = block.timestamp;
         delete numIntervalsAlreadyCollected[tokenId]; // make sure this is reset
 
-        return IERC721Receiver.onERC721Received.selector;
+        return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 }

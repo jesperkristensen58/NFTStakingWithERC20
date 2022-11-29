@@ -1,30 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
 
 /**
  * @notice An ERC20 Token Contract. This is the Reward token given out by the Controller to stakers.
  * @author Jesper Kristensen (@cryptojesperk)
  */
-contract MyToken is ERC20, ERC20Capped {
-    address private immutable deployer;
+contract MyToken is ERC20Upgradeable, ERC20CappedUpgradeable {
+    address private deployer;
     string public constant NAME = "MyToken";
     string public constant SYMBOL = "MYT";
-    uint256 private constant CAP = 1_000_000;
-    uint256 private wTokensPerWei = 2; // 1 wei buys 2 wTokens; in general, 1 wei buys `wTokens_per_Wei` wTokens.
+    uint256 private CAP;
+    uint256 private wTokensPerWei;
     mapping(address => bool) private admins;
 
     event Buy(address indexed buyer, uint256 amount, uint256 price);
 
     /**
-     * @notice Construct our ERC20 Token contract.
+     * @notice Initialize our ERC20 Token contract.
      * @dev Deploying this contract mints initialSupply to the deployer.
      */
-    constructor() ERC20(NAME, SYMBOL) ERC20Capped(CAP * 1 ether) {
-        // initially mint to this contract some initial supply
-        ERC20._mint(address(this), 100 * 1 ether);
+    function initialize() public initializer {
+        CAP = 1_000_000;
+        wTokensPerWei = 2; // 1 wei buys 2 wTokens; in general, 1 wei buys `wTokens_per_Wei` wTokens.
+
+        __ERC20_init(NAME, SYMBOL);
+        __ERC20Capped_init(CAP * 1 ether);
+
+        ERC20Upgradeable._mint(address(this), 100 * 1 ether);
         deployer = msg.sender;
         admins[deployer] = true;
     }
@@ -80,7 +85,7 @@ contract MyToken is ERC20, ERC20Capped {
         uint256 wTokensToSell = msg.value * wTokensPerWei;
 
         // do we have internal tokens in our supply?
-        if (ERC20.balanceOf(address(this)) >= wTokensToSell) _transfer(address(this), msg.sender, wTokensToSell);
+        if (ERC20Upgradeable.balanceOf(address(this)) >= wTokensToSell) _transfer(address(this), msg.sender, wTokensToSell);
         else _mint(msg.sender, wTokensToSell);
 
         emit Buy(msg.sender, wTokensToSell, wTokensPerWei);
@@ -91,7 +96,7 @@ contract MyToken is ERC20, ERC20Capped {
      * @dev meant as an emergency case.
      */
     function withdrawTokensToAdmin() external onlyAdmin {
-        _transfer(address(this), msg.sender, ERC20.balanceOf(address(this)));
+        _transfer(address(this), msg.sender, ERC20Upgradeable.balanceOf(address(this)));
     }
 
     /**
@@ -112,7 +117,7 @@ contract MyToken is ERC20, ERC20Capped {
      */
     function _mint(address account, uint256 amount)
         internal
-        override(ERC20, ERC20Capped)
+        override(ERC20Upgradeable, ERC20CappedUpgradeable)
     {
         super._mint(account, amount);
     }

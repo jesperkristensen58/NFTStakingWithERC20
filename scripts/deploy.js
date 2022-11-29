@@ -1,23 +1,33 @@
+const {ethers, upgrades} = require('hardhat');
+
 async function main() {
   const [deployer] = await ethers.getSigners();
 
-  console.log("Deploying contracts with the account:", deployer.address);
-  console.log("Account balance:", (await deployer.getBalance()).toString());
+  console.log('Deploying with a an upgradeable proxy pattern.');
+
+  console.log('============================================================');
+  console.log('DEPLOYER:');
+  console.log('Deploying contracts with the account: ', deployer.address);
+  console.log('Account balance:                      ', (await deployer.getBalance()).toString());
+  console.log('============================================================');
 
   // deploy the token
   const MyToken = await ethers.getContractFactory("MyToken");
-  const myToken = await MyToken.deploy(10);
-  console.log("MyToken Contract address:", myToken.address);
+  const instanceToken = await upgrades.deployProxy(MyToken); // use the upgradeable patterns
+  await instanceToken.deployed();
+  console.log("MyToken Contract address:", instanceToken.address);
 
   // then the NFT
-  const MyNFT = await ethers.getContractFactory("MyNFT");
-  const myNFT = await MyNFT.deploy();
-  console.log("MyNFT Contract address:", myNFT.address);
+  const MyNFTContract = await ethers.getContractFactory("MyNFT");
+  const instanceNFT = await upgrades.deployProxy(MyNFTContract);
+  await instanceNFT.deployed();
+  console.log("MyNFT Contract address:", instanceNFT.address);
 
   // now deploy the controller
   const Controller = await ethers.getContractFactory("Controller");
-  const controller = await Controller.deploy(myNFT.address, myToken.address);
-  console.log("Controller Contract address:", controller.address);
+  const instanceController = await upgrades.deployProxy(Controller, [instanceNFT.address, instanceToken.address]);
+  await instanceController.deployed();
+  console.log("Controller Contract address:", instanceController.address);
 }
 
 main()
