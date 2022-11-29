@@ -132,7 +132,10 @@ npx hardhat run scripts/upgradeToGodMode.js --network goerli
 
 ## Gas Report Result from using Clones
 
-(the table below does not show up nicely in the markdown file, but if you open the file raw, the table will show)
+Note: The table below does not show up nicely in the markdown file, but if you open the file raw, the table will show
+Here is a quick link: https://raw.githubusercontent.com/jesperkristensen58/NFTStakingWithERC20/main/README.md
+
+
 ·------------------------------------------------|---------------------------|---------------|-----------------------------·
 |              Solc version: 0.8.16              ·  Optimizer enabled: true  ·  Runs: 10000  ·  Block limit: 30000000 gas  │
 ·················································|···························|···············|······························
@@ -153,8 +156,8 @@ npx hardhat run scripts/upgradeToGodMode.js --network goerli
 
 We see that:
 
-createNewERC20 takes up an average of 1,608,856 gas.
-createNewERC20WithClone using the Clones pattern takes up an average of 270,561 gas.
+ + createNewERC20 takes up an average of <u>**1,608,856 gas**</u>.
+ + createNewERC20WithClone using the Clones pattern takes up an average of <u>**270,561 gas**</u>.
 
 Note that each was called 4 times in total.
 
