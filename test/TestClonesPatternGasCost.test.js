@@ -13,24 +13,15 @@ describe('Clones Pattern Gas Cost', function() {
   async function deployFixture() {
     [deployer, alice, bob] = await ethers.getSigners();
 
-    // deploy the token
-    const MyToken = await ethers.getContractFactory("MyToken");
-    instanceToken = await MyToken.deploy();
-    await instanceToken.deployed();
-    console.log("MyToken Contract address:", instanceToken.address);
-
     // deploy the Token Factory
     const MyTokenFactory = await ethers.getContractFactory("MyTokenFactory");
-    instanceTokenFactory = await MyTokenFactory.deploy(instanceToken.address);
+    instanceTokenFactory = await MyTokenFactory.deploy();
 
-    return { instanceToken, instanceTokenFactory, deployer, alice, bob };
+    return { instanceTokenFactory, deployer, alice, bob };
   }
 
   it('Should deploy to a valid address', async () => {
-    const {instanceToken, instanceTokenFactory} = await loadFixture(deployFixture);
-
-    expect(await instanceToken.address).to.not.be.null;
-    expect(await instanceToken.address).to.be.properAddress;
+    const {instanceTokenFactory} = await loadFixture(deployFixture);
 
     expect(await instanceTokenFactory.address).to.not.be.null;
     expect(await instanceTokenFactory.address).to.be.properAddress;
@@ -41,7 +32,7 @@ describe('Clones Pattern Gas Cost', function() {
      * @dev The gas report will be produced via `npx hardhat test` automatically (see the hardhat config file where the snapshot report is enabled)
      * So below we just ensure to call the functions - we don't need to measure the gas here.
      */
-    const {instanceToken, instanceTokenFactory} = await loadFixture(deployFixture);
+    const {instanceTokenFactory} = await loadFixture(deployFixture);
 
     // let's create a new ERC20 based on the vanilla pattern
     let tx = await instanceTokenFactory.createNewERC20(10);

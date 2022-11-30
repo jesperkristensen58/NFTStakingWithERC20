@@ -15,11 +15,11 @@ contract MyTokenFactory {
 
     /**
      * @notice Create the ERC20 Factory.
-     * @param _erc20Implementation the implementation contract of the ERC20.
      * @dev spins out new ERC20 contracts with various caps.
      */
-    constructor(address _erc20Implementation) {
-        erc20Implementation = _erc20Implementation;
+    constructor() {
+        // use this for Clones below
+        erc20Implementation = address(new MyToken());
     }
 
     /**
@@ -41,6 +41,7 @@ contract MyTokenFactory {
      * @param _cap the cap of the ERC20.
      */
     function createNewERC20(uint256 _cap) external returns (MyToken) {
+        // to compare gas prices, create a new contract from scratch here
         MyToken theClone = new MyToken();
         theClone.initialize(_cap);
 
