@@ -2,7 +2,7 @@
   "manifestVersion": "3.2",
   "admin": {
     "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-    "txHash": "0x751d6ba057f40baa3c79a4d47fb84bc44bf63d3eef5316920f6b7bfc52eea432"
+    "txHash": "0x33aebcebfa63b068e5ae298ed8fb0d089a6d4f5cd8516e8207f84624b42dc247"
   },
   "proxies": [
     {
@@ -22,24 +22,29 @@
     },
     {
       "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-      "txHash": "0x1ce35053876447cef5061ed4cdcef2126ab5f5c40c6c48ae0241684fad5c6dbc",
+      "txHash": "0x072d2cecd646160fb70332444f27896d681abbb9d1c1594544b6a6b4d85bb64e",
       "kind": "transparent"
     },
     {
       "address": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
-      "txHash": "0x440c9e3258f9af5fcf8a00cd5361f0f5771a28f6a93ddd7d6b7e7478c671ac58",
+      "txHash": "0xe6aae51264b9ca19366d675dd50d695f180b42e0cab01f6f7d4442f6cd10647b",
       "kind": "transparent"
     },
     {
       "address": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
-      "txHash": "0x5839223c72bd1375a5d3d23136b9321d63e54edc5613e642885fef0c1647f0ec",
+      "txHash": "0x0daa01e1b05d25faa2c981a2254803c2a6f85e837bbfb990bcdd459a4ae7f653",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x9A676e781A523b5d0C0e43731313A708CB607508",
+      "txHash": "0xbe658c349ea0ddcfbf1ea3f7a46f555242ba27d635d3e28593bba3aecbdec42b",
       "kind": "transparent"
     }
   ],
   "impls": {
     "a4aee0a09de20488552363e91fe6e9c55132254e1d159bde5708713bd0a3ffba": {
       "address": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
-      "txHash": "0x6a759f39a388ea6fee1a274c57a3325a8333026fffd15fe2afa4cface3bfdbf2",
+      "txHash": "0x1b5a239510437a38c481583602f1d3ebb8c617608ae693984c405671915b8bc0",
       "layout": {
         "solcVersion": "0.8.16",
         "storage": [
@@ -104,7 +109,7 @@
             "label": "rewardToken",
             "offset": 0,
             "slot": "5",
-            "type": "t_contract(MyToken)4680",
+            "type": "t_contract(MyToken)4764",
             "contract": "Controller",
             "src": "contracts/Controller.sol:24"
           },
@@ -154,7 +159,7 @@
             "label": "contract MyNFT",
             "numberOfBytes": "20"
           },
-          "t_contract(MyToken)4680": {
+          "t_contract(MyToken)4764": {
             "label": "contract MyToken",
             "numberOfBytes": "20"
           },
@@ -187,7 +192,7 @@
     },
     "5b0a60ca4e4d9b2e802ac9347ed52c71d7ff2dc9a9d173bfb959655d2fbaf199": {
       "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-      "txHash": "0xad1ea0199249363614feccce2cca531edb8107c05efbafd68e6c18d069ce940b",
+      "txHash": "0x171cff5256cd6d85708dde945590e4d9e0559153b4baaa83a0ef1d43d88a3a0d",
       "layout": {
         "solcVersion": "0.8.16",
         "storage": [
@@ -359,7 +364,7 @@
     },
     "2183682fbb1531d25e8aa35d6ecdced8bc697dc67f499a41d9f8482719bff162": {
       "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
-      "txHash": "0x91b790672875946998f057ba1e8fd6d6267f099c14795b3c89975ad0ce291943",
+      "txHash": "0x1b2f4d3c68c813d77455139c481d6a5bdf405d68e864ebbd5c536ddf1d4b2349",
       "layout": {
         "solcVersion": "0.8.16",
         "storage": [
@@ -537,9 +542,9 @@
         }
       }
     },
-    "30bcacc7ef1a6cd8672aaf8342dc81931156fdf4be108c0c1474c397dd4e403f": {
+    "5cdf07b1a3611fa0391738409a00775655695cac3329333304bb1248b6f8cdf4": {
       "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-      "txHash": "0x229975decf79f3cfdfca419c6e02edff5bb657f64d8dcec2d378903b00927f27",
+      "txHash": "0x0bf987384d8e57760044ffb74a6b59490b6c8c7111dda939b738204bfef23c8c",
       "layout": {
         "solcVersion": "0.8.16",
         "storage": [
@@ -633,28 +638,36 @@
             "src": "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol:50"
           },
           {
-            "label": "deployer",
+            "label": "_owner",
             "offset": 0,
             "slot": "152",
             "type": "t_address",
-            "contract": "MyToken",
-            "src": "contracts/MyToken.sol:13"
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
           },
           {
             "label": "wTokensPerWei",
             "offset": 0,
-            "slot": "153",
+            "slot": "202",
             "type": "t_uint256",
             "contract": "MyToken",
-            "src": "contracts/MyToken.sol:16"
+            "src": "contracts/MyToken.sol:15"
           },
           {
             "label": "admins",
             "offset": 0,
-            "slot": "154",
+            "slot": "203",
             "type": "t_mapping(t_address,t_bool)",
             "contract": "MyToken",
-            "src": "contracts/MyToken.sol:17"
+            "src": "contracts/MyToken.sol:16"
           }
         ],
         "types": {
@@ -665,6 +678,10 @@
           "t_array(t_uint256)45_storage": {
             "label": "uint256[45]",
             "numberOfBytes": "1440"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
           },
           "t_array(t_uint256)50_storage": {
             "label": "uint256[50]",

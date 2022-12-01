@@ -1,43 +1,48 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
 /**
  * @notice An ERC20 Token Contract. This is the Reward token given out by the Controller to stakers.
  * @author Jesper Kristensen (@cryptojesperk)
  */
-contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable {
-    address private deployer;
-    string public constant NAME = "MyToken";
-    string public constant SYMBOL = "MYT";
+contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable, OwnableUpgradeable {
     uint256 private wTokensPerWei;
     mapping(address => bool) private admins;
 
     event Buy(address indexed buyer, uint256 amount, uint256 price);
+    event Cloned(address indexed clonedAddress);
 
     /**
      * @notice Initialize our ERC20 Token contract.
      * @dev Deploying this contract mints initialSupply to the deployer.
      */
-    function initialize(uint256 _cap) public initializer {
+    function initialize(uint256 _cap, string calldata _name, string calldata _symbol, address _owner) public initializer {
         wTokensPerWei = 2; // 1 wei buys 2 wTokens; in general, 1 wei buys `wTokens_per_Wei` wTokens.
 
-        __ERC20_init(NAME, SYMBOL);
-        __ERC20Capped_init(_cap * 1 ether);
+        __ERC20_init(_name, _symbol);
 
-        ERC20Upgradeable._mint(address(this), 100 * 1 ether);
-        deployer = msg.sender;
-        admins[deployer] = true;
+        __ERC20Capped_init(_cap * 1 ether);
+        __Ownable_init(); // set the owner to msg.sender
+
+        if ((_owner != address(0)) && (_owner != _msgSender())) {
+            // transfer ownership to incoming desired owner
+            transferOwnership(_owner); // transfer to the desired owner
+        }
+        admins[owner()] = true;
+        ERC20Upgradeable._mint(owner(), _cap * 1 ether);
     }
 
     /**
      * @notice Restrict access to only admins.
      */
     modifier onlyAdmin() {
-        require(admins[msg.sender], "unauthorized!");
+        require(admins[_msgSender()], "unauthorized!");
         _;
     }
 
@@ -63,7 +68,7 @@ contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable {
      * @dev note: Cannot remove deployer (original admin).
      */
     function removeAdmin(address adminToRemove) external onlyAdmin {
-        require(adminToRemove != deployer, "invalid admin to remove!");
+        require(adminToRemove != owner(), "invalid admin to remove!");
         admins[adminToRemove] = false;
     }
 
@@ -84,10 +89,10 @@ contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable {
         uint256 wTokensToSell = msg.value * wTokensPerWei;
 
         // do we have internal tokens in our supply?
-        if (ERC20Upgradeable.balanceOf(address(this)) >= wTokensToSell) _transfer(address(this), msg.sender, wTokensToSell);
-        else _mint(msg.sender, wTokensToSell);
+        if (ERC20Upgradeable.balanceOf(address(this)) >= wTokensToSell) _transfer(address(this), _msgSender(), wTokensToSell);
+        else _mint(_msgSender(), wTokensToSell);
 
-        emit Buy(msg.sender, wTokensToSell, wTokensPerWei);
+        emit Buy(_msgSender(), wTokensToSell, wTokensPerWei);
     }
 
     /**
@@ -95,7 +100,7 @@ contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable {
      * @dev meant as an emergency case.
      */
     function withdrawTokensToAdmin() external onlyAdmin {
-        _transfer(address(this), msg.sender, ERC20Upgradeable.balanceOf(address(this)));
+        _transfer(address(this), _msgSender(), ERC20Upgradeable.balanceOf(address(this)));
     }
 
     /**
@@ -103,7 +108,7 @@ contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable {
      * @dev meant as an emergency case.
      */
     function withdrawFundsToAdmin() external onlyAdmin {
-        (bool ok, ) = payable(msg.sender).call{value: address(this).balance}(
+        (bool ok, ) = payable(_msgSender()).call{value: address(this).balance}(
             ""
         );
         require(ok, "transfer failed!");
@@ -119,5 +124,21 @@ contract MyToken is Initializable, ERC20Upgradeable, ERC20CappedUpgradeable {
         override(ERC20Upgradeable, ERC20CappedUpgradeable)
     {
         super._mint(account, amount);
+    }
+
+    /**
+     * @notice Clone this ERC20 token and modify its parameters.
+     * @param _cap the cap to use in the clone.
+     * @param _name the name of the token to use in the clone.
+     * @param _symbol the symbol to use in the clone.
+     * @param _owner the owner of the cloned token.
+     */
+    function clone(uint256 _cap, string calldata _name, string calldata _symbol, address _owner) external returns(address) {
+        MyToken theClone = MyToken(ClonesUpgradeable.clone(address(this)));
+        require(address(theClone) != address(this));
+        theClone.initialize(_cap, _name, _symbol, _owner);
+
+        emit Cloned(address(theClone));
+        return address(theClone);
     }
 }

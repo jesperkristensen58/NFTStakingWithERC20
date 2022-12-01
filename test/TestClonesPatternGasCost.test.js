@@ -1,3 +1,7 @@
+/**
+ * @notice Test and compare gas costs between naive creation vs using the cloning pattern.
+ * @author Jesper Kristensen (@cryptojesperk)
+ */
 const {expect} = require('chai');
 const {ethers, upgrades} = require('hardhat');
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
@@ -6,9 +10,6 @@ describe('Clones Pattern Gas Cost', function() {
   let deployer;
   let alice;
   let bob;
-  let instanceToken;
-  let instanceNFT;
-  let instanceController;
 
   async function deployFixture() {
     [deployer, alice, bob] = await ethers.getSigners();

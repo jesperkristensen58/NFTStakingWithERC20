@@ -1,3 +1,7 @@
+/**
+ * @notice Test NFT Staking for Rewards.
+ * @author Jesper Kristensen (@cryptojesperk)
+ */
 const {expect} = require('chai');
 const {ethers, upgrades} = require('hardhat');
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
@@ -15,7 +19,7 @@ describe('NFT Staking With ERC20 Contract', function() {
 
     // deploy the token
     const MyToken = await ethers.getContractFactory("MyToken");
-    instanceToken = await upgrades.deployProxy(MyToken, [1_000_000]); // use the upgradeable patterns
+    instanceToken = await upgrades.deployProxy(MyToken, [1_000_000, "MyToken", "MYT", ethers.constants.AddressZero]); // use the upgradeable patterns
     await instanceToken.deployed();
     console.log("MyToken Contract address:", instanceToken.address);
 

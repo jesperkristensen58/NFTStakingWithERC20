@@ -6,8 +6,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import "./MyToken.sol";
 
 /**
- * @notice An ERC20 Token Factory Contract.
- * @notice Create new ERC20 Token contracts. Built to compare gas costs between naive creation vs the clones pattern.
+ * @notice An ERC20 Token Factory Contract to create new ERC20 contracts based on a common template (`MyToken.sol`). 
+ * @notice Built to compare gas costs between naive creation vs the clones pattern.
  * @author Jesper Kristensen (@cryptojesperk)
  */
 contract MyTokenFactory {
@@ -30,7 +30,7 @@ contract MyTokenFactory {
     function createNewERC20WithClone(uint256 _cap) external returns (MyToken) {
         // use the clones pattern against the internally stored ERC20 contract address
         MyToken theClone = MyToken(ClonesUpgradeable.clone(erc20Implementation));
-        theClone.initialize(_cap);
+        theClone.initialize(_cap, "MyToken", "MYT", msg.sender);
 
         return theClone;
     }
@@ -43,7 +43,7 @@ contract MyTokenFactory {
     function createNewERC20(uint256 _cap) external returns (MyToken) {
         // to compare gas prices, create a new contract from scratch here
         MyToken theClone = new MyToken();
-        theClone.initialize(_cap);
+        theClone.initialize(_cap, "MyToken", "MYT", msg.sender);
 
         return theClone;
     }
