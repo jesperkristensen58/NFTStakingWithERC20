@@ -135,7 +135,7 @@ npx hardhat run scripts/upgradeToGodMode.js --network goerli
 Note: The table below does not show up nicely in the markdown file, but if you open the file raw, the table will show
 Here is a quick link: https://raw.githubusercontent.com/jesperkristensen58/NFTStakingWithERC20/main/README.md
 
-
+<pre>
 ·------------------------------------------------|---------------------------|---------------|-----------------------------·
 |              Solc version: 0.8.16              ·  Optimizer enabled: true  ·  Runs: 10000  ·  Block limit: 30000000 gas  │
 ·················································|···························|···············|······························
@@ -153,6 +153,7 @@ Here is a quick link: https://raw.githubusercontent.com/jesperkristensen58/NFTSt
 ·····················|···························|·············|·············|···············|···············|··············
 |  MyTokenFactory    ·  createNewERC20WithClone  ·     270555  ·     270567  ·       270561  ·            4  ·          -  │
 ·····················|···························|·············|·············|···············|···············|··············
+</pre>
 
 We see that:
 
